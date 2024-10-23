@@ -2,20 +2,36 @@
 
 <html>
     <head>
-        
+        <script src="//cdn.jsdelivr.net/npm/matter-js@0.18.0/build/matter.min.js"></script>
+        <script src="//cdn.jsdelivr.net/npm/matter-wrap@0.2.0/build/matter-wrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     </head>
     <body>
         Bluetooth接続サンプル
         <input type="button" value="スタート" onclick="pushStart()" />
-        <input type="button" value="ストップ" onclick="pushStop()" />
-        <div id="buttonA">
-        </div>
-        <div id="buttonB">
-        </div>
         <script>
             let charaA, charaB;
-            function hello(){
-                console.log("hello");
+            let phisics_started = false;
+            window.onload = ()=>{
+                // 1, 物理エンジン本体のクラス
+                const engine = Engine.create();
+                // 2, 画面を描画するクラス
+                const render = Render.create({
+                    element: document.body,
+                    engine: engine,
+                    options: {
+                        width: WIDTH, height: HEIGHT,
+                        showAngleIndicator: true,
+                        showCollisions: true,
+                        showDebug: false,
+                        showIds: true,
+                        showVelocity: true,
+                        hasBounds: true,
+                        wireframes: true// Important!!
+                    }
+                });
+                Render.run(render);
+                phisics_started = true;
             }
             function pushStart(){
                 console.log("pushStart");
@@ -79,8 +95,22 @@
                     }
                 )
             }
+
+
+            //Aボタン用リスナ
+            function listenerButtonA(event){
+                movR = (1 <= event.target.value.getUint8(0));
+            }
+            //Bボタン用リスナ
+            function listenerButtonB(event){
+                movL = (1 <= event.target.value.getUint8(0));
+            }
+
+
+
+            //TODO:game stopping statement
             //通知停止
-            function pushStop(){
+            function gameStop(){
                 if( charaA ){
                     //通知の停止
                     charaA.stopNotifications().then(() => {
@@ -98,34 +128,7 @@
                     });
                 }
             }
-            
-            //Aボタン用リスナ
-            function listenerButtonA(event){
-                let chara = event.target;
-                //valueがDataViewオブジェクトになっている。microbit仕様によると値は
-                //UINT8で提供されるので、その情報で取得
-                let message = 'Aボタンが' + getStatus( chara.value.getUint8(0) );
-                document.getElementById('buttonA').innerHTML = message;
-            }
-            //Bボタン用リスナ
-            function listenerButtonB(event){
-                let chara = event.target;
-                let message = 'Bボタンが' + getStatus( chara.value.getUint8(0) );
-                document.getElementById('buttonB').innerHTML = message;
-            }
-            //ボタンの状態を判別し文字列を返す
-            function getStatus( value ){
-                switch(value){
-                   case 0:
-                        return '離されました';
-                   case 1:
-                        return '押されました';
-                   break;
-                   case 2:
-                        return '長押しされました';
-                   break;
-                }
-            }
+            //TODO:game stopping statement
         </script>
     </body>
 </html>
