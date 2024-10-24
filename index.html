@@ -8,32 +8,118 @@
         <script src="https://p5play.org/v3/p5.play.js"></script>
     </head>
     <body>
-        <input type="number" max="100" min="0" />
-        <input type="button" value="スタート" onclick="pushStart()" />
+        <div>
+            下のテキストボックスに残した食べ物の割合(0~100)を入力してください。
+        </div>
+        <input id="parsent" type="number" max="100" min="-1" value="-1" />
+        <input id="start" type="button" value="スタート" onclick="Start()" />
         <script>
             let charaA, charaB;
             let phisics_started = false;
-            window.onload = ()=>{
-                // 1, 物理エンジン本体のクラス
-                const engine = Engine.create();
-                // 2, 画面を描画するクラス
-                const render = Render.create({
-                    element: document.body,
-                    engine: engine,
-                    options: {
-                        width: WIDTH, height: HEIGHT,
-                        showAngleIndicator: true,
-                        showCollisions: true,
-                        showDebug: false,
-                        showIds: true,
-                        showVelocity: true,
-                        hasBounds: true,
-                        wireframes: true// Important!!
-                    }
-                });
-                Render.run(render);
-                phisics_started = true;
+            let enemy_grop = new Group();
+            let game_started = false;
+            let difficulty;
+            let engine, world;
+            let enemies = {};
+            function preload(){
+                enemies.karaAge = loadImage("./sprites/karaage.png");
+                enemies.broccoli = loadImage("./sprites/broccoli.png");
+                enemies.kome = loadImage("./sprites/kome.png");
+                enemies.hiziki = loadImage("./sprites/hiziki.png");
+                enemies.eggplant = loadImage("./sprites/eggplant.png");
+                enemies.hamburg = loadImage("./sprites/hamburger_steak.png");
+                enemies.egg = loadImage("./sprites/egg.png");
+                enemies.tomato = loadImage("./sprites/tomato.png");
             }
+            function setup(){
+                // 1, 物理エンジン本体のクラス
+                engine = Engine.create();
+                world = engine.world;
+                // // 2, 画面を描画するクラス
+                // const render = Render.create({
+                //     element: document.body,
+                //     engine: engine,
+                //     options: {
+                //         width: WIDTH, height: HEIGHT,
+                //         showAngleIndicator: true,
+                //         showCollisions: true,
+                //         showDebug: false,
+                //         showIds: true,
+                //         showVelocity: true,
+                //         hasBounds: true,
+                //         wireframes: true// Important!!
+                //     }
+                // });
+                // Render.run(render);
+                // phisics_started = true;
+            }
+
+            function draw(){
+                if(!(game_started)){
+                    
+                }else{
+
+                }
+            }
+
+
+            function Start(){
+                difficulty = document.getElementById("parsent").value;
+                if(difficulty > -1){
+                    pushStart();
+                    game_started = true;
+                    document.getElementById("parsent").setAttribute("disabled", "");
+                    document.getElementById("start").setAttribute("disabled", "");
+                }else{
+                    alert("ずるする奴は嫌いだよ。");
+                }
+            }
+
+            class basicSprite {
+                body;
+                options = {
+                    friction: 0,
+                    restitution: 0.95,
+                    angle: a,
+                    isStatic: true
+                };
+                constructor(x,y,image,Vx,Vy,shape,size,Sp){
+                    this.x = x;
+                    this.y = y;
+                    this.image = image;
+                    this.Vx = Vx;
+                    this.Vy = Vy;
+                    this.shape = shape;
+                    this.size = size;
+                }
+                init(){
+                    switch(this.shape){
+                        case "circle":
+                            this.body = Bodies.circle(x,y,size[0],options);
+                        case "polygon":
+                            this.body = Bodies.polygon(x,y,size[0],size[1],options);
+                        case "rectangle":
+                            this.body = Bodies.rectangle(x,y,size[0],size[1],options);
+                        case "trapezoid":
+                            this.body = Bodies.trapezoid(x,y,size[0],size[1],size[1],options);
+                        default:
+                            this.body = Bodies.circle(x,y,size[0],options);
+                    }
+                    try {
+                        this.Sp = createSprite(x,y,1,1);
+                    }catch(e){
+                        alert("Sorry,an error occured!");
+                        console.log(error.code);
+                        console.log(error.message);
+                        console.log(error.name);
+                    }
+                    world.World.add(world, this.body);
+                }
+                update(){
+                    this.Sp.position = this.body.position;
+                }
+            }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             function pushStart(){
                 console.log("pushStart");
                 //microbit ボタンサービスのUUIDを直入れ
@@ -69,7 +155,9 @@
                                 //通知サービスを開始
                                 chara.startNotifications();
                                 //リスナー関数の設定
-                                chara.addEventListener('characteristicvaluechanged',listenerButtonA);
+                                chara.addEventListener('characteristicvaluechanged',function(){
+                                    movR = (1 <= event.target.value.getUint8(0));
+                                });
                             }
                             ),
                             //characteristicsの取得（Bボタン用）
@@ -80,7 +168,9 @@
                                 //通知サービスを開始
                                 chara.startNotifications();
                                 //リスナー関数の設定
-                                chara.addEventListener('characteristicvaluechanged',listenerButtonB);
+                                chara.addEventListener('characteristicvaluechanged',function(){
+                                    movL = (1 <= event.target.value.getUint8(0));
+                                });
                             }
                             )
                         ]);
@@ -96,16 +186,16 @@
                     }
                 )
             }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             //Aボタン用リスナ
-            function listenerButtonA(event){
-                movR = (1 <= event.target.value.getUint8(0));
-            }
-            //Bボタン用リスナ
-            function listenerButtonB(event){
-                movL = (1 <= event.target.value.getUint8(0));
-            }
+            // function listenerButtonA(event){
+            //     movR = (1 <= event.target.value.getUint8(0));
+            // }
+            // //Bボタン用リスナ
+            // function listenerButtonB(event){
+            //     movL = (1 <= event.target.value.getUint8(0));
+            // }
 
 
 
