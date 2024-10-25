@@ -21,7 +21,9 @@
             let difficulty;
             let engine, world;
             let enemies = {};
+            let picture_load_error = false;
             function preload(){
+                try {
                 enemies.karaAge = loadImage("./sprites/karaage.png");
                 enemies.broccoli = loadImage("./sprites/broccoli.png");
                 enemies.kome = loadImage("./sprites/kome.png");
@@ -30,6 +32,10 @@
                 enemies.hamburg = loadImage("./sprites/hamburger_steak.png");
                 enemies.egg = loadImage("./sprites/egg.png");
                 enemies.tomato = loadImage("./sprites/tomato.png");
+                }catch{
+                    Alert("Oops,picutures arent be able to load!");
+
+                }
             }
             function setup(){
                 // 1, 物理エンジン本体のクラス
@@ -79,9 +85,7 @@
                 body;
                 options = {
                     friction: 0,
-                    restitution: 0.95,
-                    angle: a,
-                    isStatic: true
+                    restitution: 0.95
                 };
                 constructor(x,y,image,Vx,Vy,shape,size,Sp){
                     this.x = x;
@@ -91,6 +95,8 @@
                     this.Vy = Vy;
                     this.shape = shape;
                     this.size = size;
+                    //this.options.angle = Math.PI() *  Math.random() * 2;//π * (0~2の乱数)
+                    //TODO: angle setting steatment move to child classes of this class(avobe player class)
                 }
                 init(){
                     switch(this.shape){
@@ -107,6 +113,9 @@
                     }
                     try {
                         this.Sp = createSprite(x,y,1,1);
+                        if(!(picture_load_error)){
+                            this.Sp.addImage(this.Image);
+                        }
                     }catch(e){
                         alert("Sorry,an error occured!");
                         console.log(error.code);
@@ -117,6 +126,28 @@
                 }
                 update(){
                     this.Sp.position = this.body.position;
+                }
+            }
+            class player extends basicSprite {
+                health;
+                constructor(x,y,image,Vx,Vy,shape,size,Sp,health){
+                    super();
+                    this.health = health;
+                }
+                init(){
+                    super.init();
+                }
+                update(){
+                    if(movR){
+                        Bodies.setspeed(this.body,{x:1,y:0});
+                    }
+                    if(movL){
+                        Bodies.setspeed(this.body,{x:-1,y:0});
+                    }
+                    if(!(movR && movL)){
+                        Bodies.setspeed(this.body,{x:0,y:0});
+                    }
+                    super.update();
                 }
             }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +188,9 @@
                                 //リスナー関数の設定
                                 chara.addEventListener('characteristicvaluechanged',function(){
                                     movR = (1 <= event.target.value.getUint8(0));
+                                    if(movR){
+                                        movL = false;
+                                    }
                                 });
                             }
                             ),
@@ -170,6 +204,9 @@
                                 //リスナー関数の設定
                                 chara.addEventListener('characteristicvaluechanged',function(){
                                     movL = (1 <= event.target.value.getUint8(0));
+                                    if(movL){
+                                        movL = false;
+                                    }
                                 });
                             }
                             )
